@@ -1,0 +1,90 @@
+
+
+-- 1
+Select t1.modelNo
+From Specializes t1 join TechnicalSupport t2 on (t1.empid = t2.empid)
+Where t2.name = 'Tom';
+
+
+-- 2
+Select t5.empId, t5.name
+From Model t1 
+join DigitalDisplay t2 on (t1.modelNo = t2.modelNo)
+Join Locates t3 on (t2.serialNo = t3.serialNo) 
+Join Specializes t4 on (t1.modelNo = t4.modelNo)
+Join TechnicalSupport t5 on (t4.empId = t5.empid)
+Where t3.siteCode = 111
+And t1.mdoelNo = 'M01'
+
+-- 3
+
+Select t1.empid, t1.name
+From TechnicalSupport t1 
+Where exists (
+select 1 
+from Specializes t2 join DigitalDisplay t3 on (t2.modelNo = t3.modelNo)
+where t3.schedulerSystem = 'Random'
+And t2.empid = t1.empid
+)
+
+-- 4
+Select empid, name, gender from TechnicalSupport
+Union all
+Select empid, name, gender from Administrator
+Union all
+Select empid, name, gender from Salesman;
+
+-- 5
+Select videoCode, videoLength from Video t1
+Where exists (select 1 from Broadcasts t2 where t2.videoCode = t1.videoCode and t2.siteCode = 111)
+And not exists (select 1 from Broadcasts t3 where t3.videoCode = t1.videoCode and t3.siteCode = 112);
+
+-- 6
+Select t1.empid
+From Administers t1
+Group by t1.empid
+Having count(*) >= 10;
+
+--7
+Select max(videoLength) max_video_length from Video t1
+Where exists (select 1 from Broadcasts t2 where t2.videoCode = t1.videoCode and t2.siteCode = 111);
+
+--8
+Select t1.videoCode, t1.videoLength from Video t1 where t1.videoLength = (
+Select max(videoLength) max_video_length from Video t2
+Where exists (select 1 from Broadcasts t3 where t3.videoCode = t2.videoCode and t3.siteCode = 112)
+);
+
+--9
+Select t2.empid, t2.name,t2.gender
+From Administrator t2
+Where t2.empid in (
+Select t1.empid
+From Administers t1
+Group by t1.empid
+Having count(*) < 10
+);
+
+--10
+select t2.empid,t3.name, t2.commissionRate 
+from Purchases t2 join Salesman t3 on (t2.empid = t3.empid) 
+where t2.commissionRate = (select max(t1.commissionRate) max_commissionRate from Purchases t1);
+
+--11
+select t3.empId, t3.name from Salesman t3 where t3.empId in (
+select t2.empId
+from Purchases t2 
+having count(*) > ANY (select count(*) c1 from Purchases t1 group by t1.empId)
+group by t2.empId);
+
+
+--12
+select t5.empId, t5.name, t5.gender from TechnicalSupport t5 where t5.empId in (
+select distinct t3.empid from Specializes t3 where not exists (
+select t1.modelno from Specializes t1 where t1.empid = (select t4.empId from TechnicalSupport t4 where t4.name = 'Tom')
+minus
+select t2.modelno from Specializes t2 where t2.empid = t3.empid)
+and t3.empid <> (select t4.empId from TechnicalSupport t4 where t4.name = 'Tom'));
+
+
+

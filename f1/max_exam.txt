@@ -1,0 +1,46 @@
+Create table student(Sid char(10), sname varchar2(10),address varchar(100), dept varchar(20));
+
+Create table book (bid int, title varchar2(10));
+
+
+
+Create table borrow (
+Sid char(10) not null, 
+bid int not null, 
+borrowdate date,
+Constraint borrow_pk Primary key (Sid) , bid, borrowdate),
+Constraint borrow_fk1 Foreign key (Sid) references Student(Sid),
+Constraint borrow_fk2 Foreign key (bid) references Book(bid)
+);
+
+Insert into book (bid, title, publisher, publishdate,price) values
+(100, 'Regression analysis',null,null,40);
+
+Select t1.sid, t1.sname
+From student t1
+Where exists (select 1 from Borrow t2 where t2.sid = t1.sid);
+
+Select title, publishdate, price
+From Book
+Where title like '%database%
+Order by price desc;
+
+
+Select t1.aname, t3.title
+From author t1 join write t2 on (t1.aid = t2.aid)
+join book t3 on (t2.bid = t3.bid)
+
+
+Select t4.aid, t6.title 
+from author t4 join write t5 on (t4.aid = t5.aid)
+       Join Book t6 on (t4.bid = t6.bid)
+Where t4.aname <> 'Jim Gray'
+And t4.bid in (
+Select t2.bid
+from author t1 join write t2 on (t1.aid = t2.aid)
+where t1.aname = 'Jim Gray')
+
+
+Q11
+Select bid, title, publisher, publishdate,price where publisher = 'Springer';
+
