@@ -1,0 +1,57 @@
+Tables are as follows:
+PEAK (*PEAK_NAME*, ELEV, DIFF, MAP, REGION)
+CLIMBER (*NAME*, SEX)
+PARTICIPATED (*TRIP_ID, NAME*)
+CLIMBED (*TRIP_ID, PEAK_NAME*, WHEN_CLIMBED)
+
+PEAK - Table containing information on peaks. One record per peak.
+CLIMBER - Table containing information on persons. One record per person.
+PARTICIPATED - Table containing information on people who took part in a trip. One record for every combination of person, trip
+CLIMBED - Table containing information on which peaks were climbed as part of a trip. One record for every combination of trip, peak.
+
+
+Question 1 - Who has climbed more than 20 peaks in some 60 day span?
+
+Question 2 - Which pair of climbers have climbed the most peaks together, and how many peaks is that?
+
+
+Answer 1 -
+
+select DISTINCT name from (
+select * from (
+select name, climbdate,numPeaksClimbed
+,sum(numPeaksClimbed) over (partition by name order by climbdate rows between 59 preceding and current row) prevsixtydaytotal
+from (
+select ov1.name,ov1.climbdate,ifnull(ov2.numPeaks,0) numPeaksClimbed from
+(select ct1.name, cv1.climbdate 
+FROM
+CLIMBER ct1 JOIN
+(SELECT date(julianday(minclimbed) + (rn-1 )) climbdate 
+FROM
+(select min(when_climbed) minclimbed from CLIMBED) V1
+JOIN
+(select ROW_number() over () rn from CLIMBED join CLIMBED) V2
+where climbdate <= (select max(when_climbed) minclimbed from CLIMBED)) CV1) ov1
+left outer join 
+(SELECT t1.NAME,t2.WHEN_CLIMBED,count(DISTINCT t2.PEAK) numPeaks
+from PARTICIPATED t1 join CLIMBED t2 on (t1.TRIP_ID=t2.TRIP_ID)
+group by t1.NAME,t2.WHEN_CLIMBED) ov2 on (ov1.name = ov2.name and ov1.climbdate = ov2.when_climbed)
+  ) o2v1
+) o3v1 where prevsixtydaytotal > 20
+) o4v1;
+
+
+
+Answer 2 -
+
+select * from (
+SELECT t1.NAME name1, t2.name name2,
+(SELECT COUNT(DISTINCT PEAK) peaksTogether FROM CLIMBED WHERE trip_id IN (
+SELECT trip_id FROM PARTICIPATED WHERE name = t1.name
+INTERSECT
+SELECT trip_id FROM PARTICIPATED WHERE name = t2.name)) 	peaksTogether
+FROM CLIMBER T1 JOIN CLIMBER T2 ON (T1.NAME != T2.NAME)
+  ) v1 
+  where name1||name2 != name2||name1
+  order by 3 desc limit 1;
+
