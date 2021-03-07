@@ -1,0 +1,89 @@
+--Q1
+
+With v1 as
+(Select row_number() over(order by 1) rn
+From tt8 t1 cross join tt8 t2)
+Select v1.rn Missing_Number
+from V1 left outer join tt8 t5
+On (v1.rn = t5.c1)
+Where v1.rn >= (select min(t3.c1) from tt8 t3)
+and v1.rn <=  (select max(t4.c1) from tt8 t4)
+and t5.c1 is null
+order by 1
+
+--Q2
+with new1 as (select c1, 
+         case when lag(c1) over (order by c1) = c1 - 1 then 'N' else 'Y' end as new_range
+    from tt8),
+    new2 as (
+select c1, sum(case when new_range = 'Y' then 1 else 0 end) over (order by c1) as grpid,new_range
+    from new1),
+    new3 as (
+    select c1, (min(c1) over (partition by grpid))  ||'-'|| (max(c1) over (partition by grpid)) range_of_nums,new_range
+    from new2)
+    ,new4 as (
+    select * from new3 where new_range = 'Y')
+    select listagg(range_of_nums,', ') WITHIN GROUP(order by c1) numbers from new4
+
+-- STRING_AGG(range_of_nums,', ' order by 
+
+
+--Q3 
+with t as (
+select 'A' c2 from dual
+union all
+select 'T' c2 from dual
+union all
+select 'C' c2 from dual
+union all
+select 'G' c2 from dual
+)
+select rownum g, dna from (
+select mod(rownum,68000) mr, dna 
+from (
+select 
+t1.c2||t2.c2||t3.c2||t4.c2||t5.c2||t6.c2||t7.c2||t8.c2||t9.c2||t10.c2||t11.c2||t12.c2||t13.c2||t14.c2||t15.c2||t16.c2||t17.c2||t18.c2||t19.c2||t20.c2 dna 
+from        t t1 cross join t t2 cross join t t3 cross join t t4 cross join t t5 cross join t t6 cross join t t7 cross join t t8 cross join t t9 cross join t t10
+ cross join t t11 cross join t t12 cross join t t13 cross join t t14 cross join t t15 cross join t t16 cross join t t17 cross join t t18 cross join t t19 cross join t t20
+) v1) v2  where mr = 67999 and rownum <= 5
+
+
+
+--Q4
+with t as (
+select 'A' c2 from dual
+union all
+select 'T' c2 from dual
+union all
+select 'C' c2 from dual
+union all
+select 'G' c2 from dual
+),
+t2 as (
+select rownum g, dna from (
+select mod(rownum,68000) mr, dna 
+from (
+select 
+t1.c2||t2.c2||t3.c2||t4.c2||t5.c2||t6.c2||t7.c2||t8.c2||t9.c2||t10.c2||t11.c2||t12.c2||t13.c2||t14.c2||t15.c2||t16.c2||t17.c2||t18.c2||t19.c2||t20.c2 dna 
+from        t t1 cross join t t2 cross join t t3 cross join t t4 cross join t t5 cross join t t6 cross join t t7 cross join t t8 cross join t t9 cross join t t10
+ cross join t t11 cross join t t12 cross join t t13 cross join t t14 cross join t t15 cross join t t16 cross join t t17 cross join t t18 cross join t t19 cross join t t20
+) v1) v2  where mr = 67999 and rownum <= 5)
+select g,dna,REGEXP_COUNT(dna, 'A') a , REGEXP_COUNT(dna, 'C') c,REGEXP_COUNT(dna, 'G') g,REGEXP_COUNT(dna, 'T') t
+from t2
+
+--Q5
+
+select year,month,s from (
+select year,month,s,rank() over (order by s desc) rn
+from (select year, month,sum(s) s from sale2 group by year, month)) v1 where rn = 1
+
+select year,month,count(*) num_needed_to_reach_100 from (
+select year,month,s,sum(s) over (partition by year, month order by n rows between UNBOUNDED preceding and current row) csum
+from sale2
+) v1 
+where csum >=100
+group by year,month
+
+
+
+
