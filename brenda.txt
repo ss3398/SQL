@@ -78,7 +78,7 @@ select year,month,s,rank() over (order by s desc) rn
 from (select year, month,sum(s) s from sale2 group by year, month)) v1 where rn = 1
 
 select year,month,count(*) num_needed_to_reach_100 from (
-select year,month,s,sum(s) over (partition by year, month order by n rows between UNBOUNDED preceding and current row) csum
+select year,month,s,sum(s) over (partition by year, month order by s desc rows between UNBOUNDED preceding and current row) csum
 from sale2
 ) v1 
 where csum >=100
